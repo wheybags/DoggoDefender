@@ -1,11 +1,15 @@
 local render = require("render")
+local simulation = require("simulation")
+
+local state
 
 function love.load()
   render.setup()
+  state = simulation.create_state()
 end
 
 function love.draw()
-  render.draw()
+  render.draw(state)
 end
 
 function love.resize()

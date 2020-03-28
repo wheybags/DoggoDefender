@@ -42,21 +42,72 @@ render.draw_grid = function(x, y, tile_grid)
       end
     end
   end
-
 end
 
-render.draw = function()
+local entity_to_index = function(entity)
+  if entity.type == "wall" then
+    if entity.wall_type == "horizontal" then return 2 end
+    if entity.wall_type == "vertical_r" then return 14 end
+    if entity.wall_type == "vertical_l" then return 11 end
+    if entity.wall_type == "top_right" then return 4 end
+    if entity.wall_type == "top_left" then return 1 end
+    if entity.wall_type == "bottom_right" then return 54 end
+    if entity.wall_type == "bottom_left" then return 53 end
+    if entity.wall_type == "t_right" then return 52 end
+    if entity.wall_type == "t_left" then return 51 end
+  end
+  if entity.type == "door" then return 23 end
+  return 12
+end
+
+local level_to_tileset_grid = function(level)
+  local grid = {}
+
+  for y = 1,#level do
+    local row = {}
+    for x = 1,#(level[y]) do
+      table.insert(row, entity_to_index(level[y][x]))
+    end
+    table.insert(grid, row)
+  end
+
+  return grid
+end
+
+render.draw = function(state)
   --render.draw_tile(10, 10, 2)
 
-  local level =
-  {
-    {1,  2,  3,  4},
-    {11, 12, 0, 14},
-    {11, 12, 12, 14},
-    {21, 2,  2,  24},
-  }
+  --local level =
+  --{
+  --  {1,  2,  3,  4},
+  --  {11, 12, 0, 14},
+  --  {11, 12, 12, 14},
+  --  {21, 2,  2,  24},
+  --}
 
-  render.draw_grid(1, 0, level)
+
+
+  --
+  --local get = function(x, y, l)
+  --  if x <= #l[1] and y <= #level and x > 0 and y > 0 then
+  --    return l[y][x]
+  --  end
+  --
+  --  return 0
+  --end
+  --
+  --local level_walls_fixed = {table.unpack(level)}
+  --
+  --for y = 1,#level do
+  --  for x = 1,#(level[y]) do
+  --    if get(x, y, level) == 1 then
+  --      if
+  --    end
+  --  end
+  --end
+
+  local grid = level_to_tileset_grid(state.level)
+  render.draw_grid(0, 0, grid)
 end
 
 return render
