@@ -38,7 +38,7 @@ function love.quit()
 end
 
 local fixed_update = function()
-
+  simulation.update(state)
 end
 
 
