@@ -47,8 +47,10 @@ simulation.create_state = function()
       elseif c == "h" then
         entity = {type = "human", direction = {0, 1}}
         player = entity
-      elseif c == "Z" then
-        entity = {type = "spawner"}
+      elseif c == "B" then
+        entity = {type = "spawner", side = "bottom", direction = {0, -1}}
+      elseif c == "T" then
+        entity = {type = "spawner", side = "top", direction = {0, 1}}
       end
 
       if entity then
@@ -76,6 +78,9 @@ simulation.create_state = function()
     player = player,
     dog = dog,
     tick = 0,
+    wave = 1,
+    wave_phase = 1,
+    next_wave_tick = 60 * 3,
     last_shot_tick = -999,
     last_move_tick = -999,
   }
@@ -84,7 +89,7 @@ end
 simulation._shoot = function(state)
   if state.player == nil then return end
 
-  if state.tick - state.last_shot_tick < 60 * 0.8 then
+  if state.tick - state.last_shot_tick < 60 * 0.4 then
     return
   end
 
@@ -105,8 +110,7 @@ end
 
 simulation._entity_die = function(state, entity)
   if entity == state.player then
-    return
-    --state.player = nil
+    state.player = nil
   end
   if entity == state.dog then
     state.dog = nil
@@ -138,7 +142,6 @@ simulation._move_player = function(state, vec, strafing)
 
   if blocking[1] and blocking[1].type == "zombie" then
     simulation._entity_die(state, state.player)
-    state.player = nil
   end
 end
 
@@ -245,7 +248,7 @@ simulation._update_zombie = function(state, zombie)
         table.insert(target_positions, {zombie.pos[1],     zombie.pos[2] + 1})
       end
     else
-      table.insert(target_positions, {zombie.pos[1], zombie.pos[2] - 1})
+      table.insert(target_positions, {zombie.pos[1] + zombie.direction[1], zombie.pos[2] + zombie.direction[2]})
     end
 
     local blocking = {}
@@ -373,31 +376,57 @@ simulation.update = function(state)
     end
   end
 
-  if state.tick % (60 * 10) == 1 then
-    local spawners = {}
+  if state.tick == state.next_wave_tick then
+    local spawners_by_side = {top = {}, bottom = {}}
     for _, entity in pairs(entities) do
       if entity.type == "spawner" then
-        table.insert(spawners, entity)
+        table.insert(spawners_by_side[entity.side], entity)
       end
     end
 
-    local to_spawn = 10
+    local spawn_zombies = function(spawners, to_spawn)
+      for _=1,to_spawn do
+        local zombie = {type = "zombie", pos = {0, 0}, creation = state.tick}
 
-    for _=1,to_spawn do
-      local zombie = {type = "zombie", pos = {0, 0}, creation = state.tick}
+        for _=1,20 do
+          local index = math.floor(math.random() * (#spawners-1)) + 1
+          local try_pos = {unpack(spawners[index].pos)}
 
-      local pos
-      while true do
-        local index = math.floor(math.random() * (#spawners-1)) + 1
-        pos = {unpack(spawners[index].pos)}
-
-        if simulation._is_passable(state, zombie, pos[1], pos[2]) then
-          break
+          if simulation._is_passable(state, zombie, try_pos[1], try_pos[2]) then
+            zombie.pos = try_pos
+            zombie.direction = {unpack(spawners[index].direction)}
+            table.insert(state.level[zombie.pos[2]][zombie.pos[1]].entities, zombie)
+            break
+          end
         end
       end
+    end
 
-      zombie.pos = pos
-      table.insert(state.level[pos[2]][pos[1]].entities, zombie)
+    local wave = constants.waves[state.wave]
+
+    if wave then
+      local wave_phase = wave[state.wave_phase]
+
+      print("spawning wave " .. state.wave .. ", phase " .. state.wave_phase)
+
+      if wave_phase.bottom then
+        spawn_zombies(spawners_by_side["bottom"], wave_phase.bottom)
+      end
+
+      if wave_phase.top then
+        spawn_zombies(spawners_by_side["top"], wave_phase.top)
+      end
+
+
+      state.wave_phase = state.wave_phase + 1
+      if constants.waves[state.wave][state.wave_phase] == nil then
+        state.wave_phase = 1
+        state.wave = state.wave + 1
+      end
+
+      state.next_wave_tick = state.tick + wave_phase.wait
+    else
+      -- you're winner!
     end
   end
 end
