@@ -3,28 +3,30 @@ local simulation = {}
 simulation.create_state = function()
 
     local level_str = [[
-m-----,------,
-]     [      [
->--------D---<
-]            [
-]            [
-]     h      [
-]            [
-]            [
-]            [
-/------------.
-``````````````
-``````````````
-``````````````
-``````````````
-``````z```````
-``````````````
-``````````````
+m-----,-----,
+]     [     [
+>-------D---<
+]xxxxxdxxxxx[
+]xxxxxxxxxxx[
+]           [
+]     h     [
+]           [
+]           [
+]           [
+/-----------.
+`````````````
+`````````````
+`````````````
+`````````````
+``````z``````
+`````````````
+`````````````
 ]]
 
   local level = {}
 
   local player
+  local dog
 
   for line in level_str:gmatch("([^\n]*)\n?") do
     local row = {}
@@ -53,6 +55,11 @@ m-----,------,
         entity = {type = "door"}
       elseif c == "z" then
         entity = {type = "zombie"}
+      elseif c == "d" then
+        entity = {type = "dog"}
+        dog = entity
+      elseif c == "x" then
+        entity = {type = "dogfloor"}
       elseif c == "h" then
         entity = {type = "human"}
         player = entity
@@ -81,6 +88,7 @@ m-----,------,
   {
     level = level,
     player = player,
+    dog = dog,
     tick = 0,
     last_shot_tick = -999,
     last_move_tick = -999,
@@ -88,6 +96,8 @@ m-----,------,
 end
 
 simulation.shoot = function(state)
+  if state.player == nil then return end
+
   if state.tick - state.last_shot_tick < 60 * 0.3 then
     return
   end
@@ -100,6 +110,9 @@ simulation.shoot = function(state)
 end
 
 simulation.move_player = function(state, vec)
+  if state.player == nil then return end
+
+
   if state.tick - state.last_move_tick < 60 * 0.2 then
     return
   end
@@ -156,14 +169,16 @@ simulation._is_passable = function(state, for_entity, x, y, blocking)
   end
 
   for _, tile_entity in pairs(state.level[y][x].entities) do
-    if for_entity.type == "knife" then
-      if tile_entity.type == "zombie" then
+    if tile_entity.type ~= "tombstone" and tile_entity.type ~= "dogfloor" then
+      if for_entity.type == "knife" then
+        if tile_entity.type == "zombie" then
+          table.insert(blocking, tile_entity)
+        end
+        return true
+      else
         table.insert(blocking, tile_entity)
+        return false
       end
-      return true
-    else
-      table.insert(blocking, for_entity)
-      return false
     end
   end
 
@@ -174,8 +189,39 @@ simulation._update_zombie = function(state, zombie)
   if (state.tick - zombie.creation) % 60 == 0 then
     local target_pos = {zombie.pos[1], zombie.pos[2] - 1}
 
-    if simulation._is_passable(state, zombie, target_pos[1], target_pos[2]) then
+    local blocking = {}
+
+    if simulation._is_passable(state, zombie, target_pos[1], target_pos[2], blocking) then
       simulation._move_entity(state, zombie, target_pos[1], target_pos[2])
+    end
+
+    if blocking[1] then
+      print(blocking[1].type)
+    end
+
+    if blocking[1] and blocking[1].type == "wall" then
+      local blocker = blocking[1]
+
+      if zombie.blocked_by and zombie.blocked_by.blocker == blocker then
+        if state.tick - zombie.blocked_by.tick > 60 * 1 then
+          simulation._remove_entity(state, blocking[1])
+          zombie.blocked_by = nil
+        end
+      else
+        zombie.blocked_by = {tick = state.tick, blocker = blocker}
+      end
+    end
+
+    if blocking[1] and blocking[1].type == "human" then
+      simulation._remove_entity(state, blocking[1])
+      state.player = nil
+      table.insert(state.level[target_pos[2]][target_pos[1]].entities, {type = "swirl", orig = "human", pos = target_pos, creation = state.tick})
+    end
+
+    if blocking[1] and blocking[1].type == "dog" then
+      simulation._remove_entity(state, blocking[1])
+      state.dog = nil
+      table.insert(state.level[target_pos[2]][target_pos[1]].entities, {type = "swirl", orig = "dog", pos = target_pos, creation = state.tick})
     end
   end
 end
@@ -199,7 +245,7 @@ simulation._update_knife = function(state, knife)
       simulation._remove_entity(state, blocking[1])
       simulation._remove_entity(state, knife)
 
-      table.insert(state.level[target_pos[2]][target_pos[1]].entities, {type = "swirl", pos = target_pos, creation = state.tick})
+      table.insert(state.level[target_pos[2]][target_pos[1]].entities, {type = "swirl", orig = "zombie", pos = target_pos, creation = state.tick})
       return
     end
   end
@@ -213,6 +259,11 @@ simulation._update_swirl = function(state, swirl)
 end
 
 simulation.update = function(state)
+  state.tick = state.tick + 1
+
+  if state.dog == nil then
+    return
+  end
 
   local entities = {}
 
@@ -231,8 +282,6 @@ simulation.update = function(state)
       if entity.type == "knife" then simulation._update_knife(state, entity) end
     end
   end
-
-  state.tick = state.tick + 1
 end
 
 return simulation

@@ -38,27 +38,35 @@ end
 
 
 render._entity_to_index = function(entity)
+  local lookup
+
   if entity == nil then
     return 12
   end
 
-  if entity.type == "wall" then
-    if entity.wall_type == "horizontal" then return 2 end
-    if entity.wall_type == "vertical_r" then return 14 end
-    if entity.wall_type == "vertical_l" then return 11 end
-    if entity.wall_type == "top_right" then return 4 end
-    if entity.wall_type == "top_left" then return 1 end
-    if entity.wall_type == "bottom_right" then return 54 end
-    if entity.wall_type == "bottom_left" then return 53 end
-    if entity.wall_type == "t_right" then return 52 end
-    if entity.wall_type == "t_left" then return 51 end
+  lookup = function(entity_type)
+    if entity_type == "wall" then
+      if entity.wall_type == "horizontal" then return 2 end
+      if entity.wall_type == "vertical_r" then return 14 end
+      if entity.wall_type == "vertical_l" then return 11 end
+      if entity.wall_type == "top_right" then return 4 end
+      if entity.wall_type == "top_left" then return 1 end
+      if entity.wall_type == "bottom_right" then return 54 end
+      if entity.wall_type == "bottom_left" then return 53 end
+      if entity.wall_type == "t_right" then return 52 end
+      if entity.wall_type == "t_left" then return 51 end
+    end
+    if entity_type == "door" then return 23 end
+    if entity_type == "zombie" then return 10 end
+    if entity_type == "human" then return 5 end
+    if entity_type == "knife" then return 47 end
+    if entity_type == "swirl" then return lookup(entity.orig) end
+    if entity_type == "tombstone" then return 79 end
+    if entity_type == "dog" then return 16 end
+    if entity_type == "dogfloor" then return 12 end
   end
-  if entity.type == "door" then return 23 end
-  if entity.type == "zombie" then return 10 end
-  if entity.type == "human" then return 5 end
-  if entity.type == "knife" then return 47 end
-  if entity.type == "swirl" then return 10 end
-  if entity.type == "tombstone" then return 79 end
+
+  return lookup(entity.type)
 end
 
 render.draw_grid = function(x, y, state)
