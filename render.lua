@@ -198,4 +198,24 @@ render.draw_pre_game = function()
   end
 end
 
+render.draw_win_screen = function()
+  local win_string =
+  {
+    "congratulations",
+    "the evil necromancer has",
+    "been defeated",
+    "your faithful companion",
+    "shall run free from worry",
+    "",
+    "enter to restart"
+  }
+
+  local y = math.floor((constants.screen_tiles_height + constants.screen_offset_y) / 2 - #win_string / 2)
+
+  for line_index, line in pairs(win_string) do
+    local x = math.floor(constants.screen_tiles_width / 2 - string.len(line) / 2)
+    render._draw_text(x, y + line_index, line)
+  end
+end
+
 return render

@@ -1,5 +1,6 @@
 local render = require("render")
 local simulation = require("simulation")
+local constants = require("constants")
 
 
 local state
@@ -35,6 +36,10 @@ function love.draw()
   else
     render.draw(state)
   end
+
+  if state and state.won then
+    render.draw_win_screen(state)
+  end
 end
 
 function love.resize()
@@ -42,7 +47,7 @@ function love.resize()
 end
 
 function love.keypressed(key)
-  if key == "return" and (state == nil or state.dog == nil) then
+  if key == "return" and (state == nil or state.dog == nil or state.won) then
     if not music_playing then
       play_music()
     end

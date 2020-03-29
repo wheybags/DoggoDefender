@@ -81,6 +81,7 @@ simulation.create_state = function()
     level = level,
     player = player,
     dog = dog,
+    won = false,
     tick = 0,
     wave = 1,
     wave_display = 1,
@@ -210,7 +211,7 @@ simulation._is_passable = function(state, for_entity, x, y, blocking)
 
     if not is_passable then
       if for_entity.type == "knife" then
-        if tile_entity.type == "zombie" or tile_entity.type == "swirl" then
+        if tile_entity.type == "zombie" or tile_entity.type == "swirl" or tile_entity.type == "dog" then
           table.insert(blocking, tile_entity)
         end
         return true
@@ -300,7 +301,7 @@ simulation._update_knife = function(state, knife)
       simulation._move_entity(state, knife, target_pos[1], target_pos[2])
     end
 
-    if blocking[1] and blocking[1].type == "swirl" then
+    if blocking[1] and (blocking[1].type == "swirl" or blocking[1].type == "dog") then
       simulation._remove_entity(state, knife)
       return
     end
@@ -418,7 +419,11 @@ simulation._update_spawns = function(state, entities)
 
       state.next_wave_tick = state.tick + wave_phase.wait
     else
-      -- you're winner!
+      if state.won == false then
+        state.won = true
+        stop_music()
+        love.audio.play(love.audio.newSource("/sfx/dogbark.wav", "stream"))
+      end
     end
   end
 end
@@ -427,6 +432,10 @@ simulation.update = function(state)
   state.tick = state.tick + 1
 
   if state.dog == nil then
+    return
+  end
+
+  if state.won then
     return
   end
 

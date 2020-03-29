@@ -98,6 +98,54 @@ constants.waves[4] =
     wait = 1,
   }
 }
+constants.waves[5] =
+{
+  {
+    top = 3,
+    wait = 60 * 2,
+  },
+  {
+    right = 3,
+    wait = 60 * 2,
+  },
+  {
+    bottom = 3,
+    wait = 60 * 2,
+  },
+  {
+    left = 3,
+    wait = 60 * 2,
+  },
+  {
+    top = 3,
+    wait = 60 * 2,
+  },
+  {
+    right = 3,
+    wait = 60 * 2,
+  },
+  {
+    bottom = 3,
+    wait = 60 * 2,
+  },
+  {
+    left = 3,
+    wait = 1,
+  }
+}
+constants.waves[6] =
+{
+  {
+    top = 10,
+    bottom = 10,
+    wait = 60 * 15,
+  },
+  {
+    left = 5,
+    right = 5,
+    wait = 60 * 2,
+  },
+}
 
 
 
