@@ -37,8 +37,12 @@ function love.draw()
     render.draw(state)
   end
 
-  if state and state.won then
+  if state and state.won and not state.infinite then
     render.draw_win_screen(state)
+  end
+
+  if state and not state.dog then
+    render.draw_lose_screen(state)
   end
 end
 
@@ -47,12 +51,18 @@ function love.resize()
 end
 
 function love.keypressed(key)
-  if key == "return" and (state == nil or state.dog == nil or state.won) then
+  if key == "return" and (state == nil or state.dog == nil) then
     if not music_playing then
       play_music()
     end
 
     state = simulation.create_state()
+    love.audio.play(love.audio.newSource("/sfx/dogbark.wav", "stream"))
+  end
+
+  if key == "return" and state and state.won and not state.infinite then
+    state.infinite = true
+    play_music()
     love.audio.play(love.audio.newSource("/sfx/dogbark.wav", "stream"))
   end
 end

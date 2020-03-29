@@ -90,6 +90,7 @@ simulation.create_state = function()
     last_shot_tick = -999,
     last_move_tick = -999,
     tileset = "color",
+    high_score = simulation._read_high_score()
   }
 end
 
@@ -115,6 +116,24 @@ simulation._shoot = function(state)
   end
 end
 
+local high_score_path = "dog_defender_high_score.txt"
+
+simulation._read_high_score = function()
+  local high_score = 1
+  if love.filesystem.getInfo(high_score_path) then
+    local contents, _ = love.filesystem.read(high_score_path)
+    high_score = tonumber(contents)
+  end
+
+  return high_score
+end
+
+simulation._handle_high_score = function(state)
+  if state.wave_display > state.high_score then
+    love.filesystem.write(high_score_path, ""..state.wave_display)
+  end
+end
+
 simulation._entity_die = function(state, entity)
   if entity == state.player then
     state.player = nil
@@ -124,6 +143,8 @@ simulation._entity_die = function(state, entity)
     state.tileset = "mono"
     stop_music()
     love.audio.play(love.audio.newSource("/sfx/Dog Death.wav", "stream"))
+
+    simulation._handle_high_score(state)
   end
   simulation._remove_entity(state, entity)
   table.insert(state.level[entity.pos[2]][entity.pos[1]].entities, {type = "swirl", orig = entity.type, pos = {unpack(entity.pos)}, creation = state.tick})
@@ -423,8 +444,22 @@ simulation._update_spawns = function(state, entities)
         state.won = true
         stop_music()
         love.audio.play(love.audio.newSource("/sfx/dogbark.wav", "stream"))
+        simulation._handle_high_score(state)
+      end
+
+      if state.infinite then
+        state.wave_display = state.wave
+        state.wave = state.wave + 1
+
+        local zombie_count = state.wave - #constants.waves - 1
+        spawn_zombies(spawners_by_side["left"], zombie_count)
+        spawn_zombies(spawners_by_side["right"], zombie_count)
+        spawn_zombies(spawners_by_side["top"], zombie_count)
+        spawn_zombies(spawners_by_side["bottom"], zombie_count)
       end
     end
+
+
   end
 end
 
@@ -435,7 +470,7 @@ simulation.update = function(state)
     return
   end
 
-  if state.won then
+  if state.won and not state.infinite then
     return
   end
 

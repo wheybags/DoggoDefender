@@ -39,7 +39,7 @@ for _ in tmp do
   constants.screen_tiles_height = constants.screen_tiles_height + 1
 end
 
-constants.screen_offset_y = 1
+constants.screen_offset_y = 2
 
 
 constants.waves = {}

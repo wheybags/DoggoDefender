@@ -172,6 +172,10 @@ render.draw = function(state)
   local wave_str = "wave " .. str_pad(''..state.wave_display, '0', 4)
   local wave_str_pos = math.floor(constants.screen_tiles_width / 2 - string.len(wave_str) / 2)
   render._draw_text(wave_str_pos, 0, wave_str)
+
+  local high_score_str = "high score " .. str_pad(''..state.high_score, '0', 4)
+  local high_score_pos = math.floor(constants.screen_tiles_width / 2 - string.len(high_score_str) / 2)
+  render._draw_text(high_score_pos, 1, high_score_str)
 end
 
 render.draw_pre_game = function()
@@ -198,7 +202,39 @@ render.draw_pre_game = function()
   end
 end
 
-render.draw_win_screen = function()
+render.draw_lose_screen = function(state)
+  local win_string =
+  {
+    "the zombies got him!",
+    "enter to restart",
+    "",
+  }
+
+  if state.infinite then
+    win_string =
+    {
+      "you wake up from a",
+      "bad dream where the",
+      "zombies got your boy",
+      "",
+      "enter to restart",
+      "",
+    }
+  end
+
+  if state.wave_display > state.high_score then
+    table.insert(win_string, "new high score!")
+  end
+
+  local y = 2--math.floor((constants.screen_tiles_height + constants.screen_offset_y) / 2 - #win_string / 2)
+
+  for line_index, line in pairs(win_string) do
+    local x = math.floor(constants.screen_tiles_width / 2 - string.len(line) / 2)
+    render._draw_text(x, y + line_index, line)
+  end
+end
+
+render.draw_win_screen = function(state)
   local win_string =
   {
     "congratulations",
@@ -207,10 +243,11 @@ render.draw_win_screen = function()
     "your faithful companion",
     "shall run free from worry",
     "",
-    "enter to restart"
+    "press enter to",
+    "try infinite mode",
   }
 
-  local y = math.floor((constants.screen_tiles_height + constants.screen_offset_y) / 2 - #win_string / 2)
+  local y = 2 --math.floor((constants.screen_tiles_height + constants.screen_offset_y) / 2 - #win_string / 2)
 
   for line_index, line in pairs(win_string) do
     local x = math.floor(constants.screen_tiles_width / 2 - string.len(line) / 2)
