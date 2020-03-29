@@ -100,15 +100,16 @@ end
 simulation._shoot = function(state)
   if state.player == nil then return end
 
-  if state.tick - state.last_shot_tick < 60 * 0.3 then
+  if state.tick - state.last_shot_tick < 60 * 1 then
     return
   end
 
   state.last_shot_tick = state.tick
 
-  local pos = {unpack(state.player.pos)}
-
-  table.insert(state.level[pos[2]][pos[1]].entities, {type = "knife", pos = pos, creation = state.tick, direction = {unpack(state.player.direction)}})
+  for _, direction in pairs({{0,1}, {1,0}, {0,-1}, {-1,0}}) do
+    local pos = {unpack(state.player.pos)}
+    table.insert(state.level[pos[2]][pos[1]].entities, {type = "knife", pos = pos, creation = state.tick, direction = direction})
+  end
 end
 
 simulation._move_player = function(state, vec, strafing)
@@ -191,7 +192,7 @@ simulation._is_passable = function(state, for_entity, x, y, blocking)
 
     if not is_passable then
       if for_entity.type == "knife" then
-        if tile_entity.type == "zombie" then
+        if tile_entity.type == "zombie" or tile_entity.type == "swirl" then
           table.insert(blocking, tile_entity)
         end
         return true
@@ -281,9 +282,14 @@ simulation._update_knife = function(state, knife)
       simulation._move_entity(state, knife, target_pos[1], target_pos[2])
     end
 
-    if blocking[1] and blocking[1].type == "zombie" then
-      simulation._remove_entity(state, blocking[1])
+    if blocking[1] and blocking[1].type == "swirl" then
       simulation._remove_entity(state, knife)
+      return
+    end
+
+    if blocking[1] and blocking[1].type == "zombie" then
+      simulation._remove_entity(state, knife)
+      simulation._remove_entity(state, blocking[1])
 
       table.insert(state.level[target_pos[2]][target_pos[1]].entities, {type = "swirl", orig = "zombie", pos = target_pos, creation = state.tick})
       return
@@ -352,7 +358,7 @@ simulation.update = function(state)
     end
   end
 
-  if state.tick % (60 * 10) == 0 then
+  if state.tick % (60 * 10) == 1 then
     local spawners = {}
     for _, entity in pairs(entities) do
       if entity.type == "spawner" then

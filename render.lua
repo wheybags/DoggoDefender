@@ -77,6 +77,11 @@ render.draw_grid = function(x, y, state)
 
   for grid_y = 1,#tile_grid do
     for grid_x=1,#(tile_grid[grid_y]) do
+
+      -- draw ground tile
+      render.draw_tile(x + (grid_x-1) * constants.tile_size, y + (grid_y-1) * constants.tile_size, 12, 0)
+
+
       for _, entity in pairs(tile_grid[grid_y][grid_x].entities) do
         local index = render._entity_to_index(entity)
 
@@ -112,7 +117,7 @@ render.draw_grid = function(x, y, state)
     end
   end
 
-  if indicator_data then
+  if false then --indicator_data then
     -- if love.keyboard.isDown("left") then
     --player_vector = {-1, 0}
     --end
