@@ -48,6 +48,7 @@ function love.keypressed(key)
     end
 
     state = simulation.create_state()
+    love.audio.play(love.audio.newSource("/sfx/dogbark.wav", "stream"))
   end
 end
 
