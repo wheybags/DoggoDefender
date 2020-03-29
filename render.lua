@@ -174,4 +174,28 @@ render.draw = function(state)
   render._draw_text(wave_str_pos, 0, wave_str)
 end
 
+render.draw_pre_game = function()
+  local intro_string =
+  {
+    "the evil necromancer has",
+    "summoned an unholy army",
+    "hell bent on destroying",
+    "your faithful companion",
+    "",
+    "do not let him!",
+    "",
+    "wasd to move",
+    "space to shoot",
+    "",
+    "enter to start"
+  }
+
+  local y = math.floor((constants.screen_tiles_height + constants.screen_offset_y) / 2 - #intro_string / 2)
+
+  for line_index, line in pairs(intro_string) do
+    local x = math.floor(constants.screen_tiles_width / 2 - string.len(line) / 2)
+    render._draw_text(x, y + line_index, line)
+  end
+end
+
 return render

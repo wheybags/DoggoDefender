@@ -121,6 +121,8 @@ simulation._entity_die = function(state, entity)
   if entity == state.dog then
     state.dog = nil
     state.tileset = "mono"
+    stop_music()
+    love.audio.play(love.audio.newSource("/sfx/Dog Death.wav", "stream"))
   end
   simulation._remove_entity(state, entity)
   table.insert(state.level[entity.pos[2]][entity.pos[1]].entities, {type = "swirl", orig = entity.type, pos = {unpack(entity.pos)}, creation = state.tick})
