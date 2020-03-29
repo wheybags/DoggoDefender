@@ -23,14 +23,17 @@ render.setup = function()
   end
 end
 
-render.draw_tile = function(x, y, tile_index)
+render.draw_tile = function(x, y, tile_index, rotation)
   assert(render.tileset_quads[tile_index])
+
+  if rotation == nil then rotation = 0 end
 
   love.graphics.draw(render.tileset,
                      render.tileset_quads[tile_index],
                      x * constants.render_scale,
                      y * constants.render_scale,
-                     0, constants.render_scale, constants.render_scale)
+                     rotation, constants.render_scale, constants.render_scale,
+                     constants.tile_size / 2, constants.tile_size / 2)
 end
 
 
@@ -53,19 +56,37 @@ render._entity_to_index = function(entity)
   if entity.type == "door" then return 23 end
   if entity.type == "zombie" then return 10 end
   if entity.type == "human" then return 5 end
+  if entity.type == "knife" then return 47 end
 end
 
-render.draw_grid = function(x, y, tile_grid)
+render.draw_grid = function(x, y, state)
+  local tile_grid = state.level
+
   for grid_y = 1,#tile_grid do
     for grid_x=1,#(tile_grid[grid_y]) do
-      local entity = tile_grid[grid_y][grid_x].entity
-      local index = render._entity_to_index(entity)
+      for _, entity in pairs(tile_grid[grid_y][grid_x].entities) do
+        local index = render._entity_to_index(entity)
 
-      local shift = 0
-      if entity and entity.shift then shift = entity.shift end
+        local shift = 0
+        if entity and entity.shift then shift = entity.shift end
 
-      if index ~= 0 then
-        render.draw_tile(x + (grid_x-1) * constants.tile_size, y + (grid_y-1) * constants.tile_size + shift, index)
+        if index ~= 0 then
+          local rotation = 0
+          if entity.type == "knife" then
+            local rotation_lut =
+            {
+              0 * math.pi / 180,
+              90 * math.pi / 180,
+              180 * math.pi / 180,
+              270 * math.pi / 180,
+            }
+
+            local rotation_index = math.floor(state.tick / 12) % 4
+            rotation = rotation_lut[rotation_index + 1]
+            assert(rotation)
+          end
+          render.draw_tile(x + (grid_x-1) * constants.tile_size, y + (grid_y-1) * constants.tile_size + shift, index, rotation)
+        end
       end
     end
   end
@@ -120,7 +141,7 @@ render.draw = function(state)
 
   --local grid = level_to_tileset_grid(state.level)
   render.draw_grid((constants.screen_tiles_width / 2 - #state.level[1] / 2) * constants.tile_size,
-                   (constants.screen_tiles_height / 2 - #state.level / 2) * constants.tile_size, state.level)
+                   (constants.screen_tiles_height / 2 - #state.level / 2) * constants.tile_size, state)
 end
 
 return render

@@ -17,7 +17,9 @@ function love.resize()
 end
 
 function love.keypressed(key)
-
+  if key == "space" then
+    simulation.shoot(state)
+  end
 end
 
 
