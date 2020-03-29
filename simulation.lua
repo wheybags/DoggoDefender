@@ -1,27 +1,11 @@
+local render = require("render")
+local constants = require("constants")
+
 local simulation = {}
 
 simulation.create_state = function()
 
-    local level_str = [[
-m-----,-----,
-]     [     [
->-------D---<
-]xxxxxdxxxxx[
-]xxxxxxxxxxx[
-]           [
-]     h     [
-]           [
-]           [
-]           [
-/-----------.
-`````````````
-`````````````
-`````````````
-`````````````
-`````````````
-ZZZZZZZZZZZZZ
-ZZZZZZZZZZZZZ
-]]
+  local level_str = constants.level_ascii
 
   local level = {}
 
@@ -121,10 +105,12 @@ end
 
 simulation._entity_die = function(state, entity)
   if entity == state.player then
-    state.player = nil
+    return
+    --state.player = nil
   end
   if entity == state.dog then
     state.dog = nil
+    render.tileset = render.tileset_mono
   end
   simulation._remove_entity(state, entity)
   table.insert(state.level[entity.pos[2]][entity.pos[1]].entities, {type = "swirl", orig = entity.type, pos = {unpack(entity.pos)}, creation = state.tick})
@@ -244,25 +230,33 @@ simulation._update_zombie = function(state, zombie)
       end
     end
 
-    local target_pos
+    local target_positions = {}
     if on_dogfloor and state.dog then
       if state.dog.pos[1] < zombie.pos[1] then
-        target_pos =  {zombie.pos[1] - 1, zombie.pos[2]}
-      elseif state.dog.pos[1] > zombie.pos[1] then
-        target_pos =  {zombie.pos[1] + 1, zombie.pos[2]}
-      elseif state.dog.pos[2] < zombie.pos[2] then
-        target_pos =  {zombie.pos[1], zombie.pos[2] - 1}
-      elseif state.dog.pos[2] > zombie.pos[2] then
-        target_pos =  {zombie.pos[1], zombie.pos[2] + 1}
+        table.insert(target_positions, {zombie.pos[1] - 1, zombie.pos[2]})
+      end
+      if state.dog.pos[1] > zombie.pos[1] then
+        table.insert(target_positions, {zombie.pos[1] + 1, zombie.pos[2]})
+      end
+      if state.dog.pos[2] < zombie.pos[2] then
+        table.insert(target_positions, {zombie.pos[1],     zombie.pos[2] - 1})
+      end
+      if state.dog.pos[2] > zombie.pos[2] then
+        table.insert(target_positions, {zombie.pos[1],     zombie.pos[2] + 1})
       end
     else
-      target_pos = {zombie.pos[1], zombie.pos[2] - 1}
+      table.insert(target_positions, {zombie.pos[1], zombie.pos[2] - 1})
     end
 
     local blocking = {}
 
-    if simulation._is_passable(state, zombie, target_pos[1], target_pos[2], blocking) then
-      simulation._move_entity(state, zombie, target_pos[1], target_pos[2])
+    for _, target_pos in pairs(target_positions) do
+      blocking = {}
+
+      if simulation._is_passable(state, zombie, target_pos[1], target_pos[2], blocking) then
+        simulation._move_entity(state, zombie, target_pos[1], target_pos[2])
+        break
+      end
     end
 
     if blocking[1] and blocking[1].type == "wall" then

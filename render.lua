@@ -3,8 +3,12 @@ local constants = require("constants")
 local render = {}
 
 render.setup = function()
-  render.tileset = love.graphics.newImage('gfx/colored_tilemap.png')
-  render.tileset:setFilter("nearest")
+  render.tileset_color = love.graphics.newImage('gfx/colored_tilemap.png')
+  render.tileset_color:setFilter("nearest")
+  render.tileset_mono = love.graphics.newImage('gfx/monochrome_tilemap.png')
+  render.tileset_mono:setFilter("nearest")
+
+  render.tileset = render.tileset_color
 
   render.tileset_quads = {}
 
@@ -23,12 +27,13 @@ render.setup = function()
   end
 end
 
-render.draw_tile = function(x, y, tile_index, rotation)
+render.draw_tile = function(x, y, tile_index, rotation, tileset)
   assert(render.tileset_quads[tile_index])
 
   if rotation == nil then rotation = 0 end
+  if tileset == nil then tileset = render.tileset end
 
-  love.graphics.draw(render.tileset,
+  love.graphics.draw(tileset,
                      render.tileset_quads[tile_index],
                      x * constants.render_scale,
                      y * constants.render_scale,
@@ -103,7 +108,13 @@ render.draw_grid = function(x, y, state)
             rotation = rotation_lut[rotation_index + 1]
             assert(rotation)
           end
-          render.draw_tile(x + (grid_x-1) * constants.tile_size, y + (grid_y-1) * constants.tile_size + shift, index, rotation)
+
+          local tileset
+          if entity.type == "swirl" and entity.orig == "dog" then
+            tileset = render.tileset_color
+          end
+
+          render.draw_tile(x + (grid_x-1) * constants.tile_size, y + (grid_y-1) * constants.tile_size + shift, index, rotation, tileset)
 
           if entity.type == "human" then
             indicator_data =
@@ -189,8 +200,8 @@ render.draw = function(state)
   --end
 
   --local grid = level_to_tileset_grid(state.level)
-  render.draw_grid((constants.screen_tiles_width / 2 - #state.level[1] / 2) * constants.tile_size,
-                   (constants.screen_tiles_height / 2 - #state.level / 2) * constants.tile_size, state)
+  render.draw_grid((constants.screen_tiles_width / 2 - (#state.level[1]-1) / 2) * constants.tile_size,
+                   (constants.screen_tiles_height / 2 - (#state.level-1) / 2) * constants.tile_size, state)
 end
 
 return render
