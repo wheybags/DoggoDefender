@@ -52,7 +52,7 @@ m-----,------,
       elseif c == "D" then
         entity = {type = "door"}
       elseif c == "z" then
-        --entity = {type = "zombie"}
+        entity = {type = "zombie"}
       elseif c == "h" then
         entity = {type = "human"}
         player = entity
@@ -81,10 +81,17 @@ m-----,------,
     level = level,
     player = player,
     tick = 0,
+    last_shot_tick = -999
   }
 end
 
 simulation.shoot = function(state)
+  if state.tick - state.last_shot_tick < 60 * 0.3 then
+    return
+  end
+
+  state.last_shot_tick = state.tick
+
   local pos = {unpack(state.player.pos)}
 
   table.insert(state.level[pos[2]][pos[1]].entities, {type = "knife", pos = pos})
@@ -95,6 +102,8 @@ simulation._is_oob = function(state, x, y)
 end
 
 simulation._remove_entity = function (state, entity)
+  entity.removed = true
+
   local old_tile = state.level[entity.pos[2]][entity.pos[1]]
   local removed = false
   for i, tile_entity in pairs(old_tile.entities) do
@@ -121,19 +130,26 @@ simulation._move_entity = function(state, entity, x, y)
   assert(state.level[y][x])
   table.insert(state.level[y][x].entities, entity)
   entity.pos = {x, y}
+  entity.removed = nil
 end
 
-simulation._is_passable = function(state, for_entity, x, y)
+simulation._is_passable = function(state, for_entity, x, y, blocking)
+  if blocking == nil then blocking = {} end
+
   if simulation._is_oob(state, x, y) then
     return false
   end
 
-  if for_entity.type == "knife" then
-    return true
-  end
-
   for _, tile_entity in pairs(state.level[y][x].entities) do
-    return false
+    if for_entity.type == "knife" then
+      if tile_entity.type == "zombie" then
+        table.insert(blocking, tile_entity)
+      end
+      return true
+    else
+      table.insert(blocking, for_entity)
+      return false
+    end
   end
 
   return true
@@ -150,7 +166,7 @@ simulation._update_zombie = function(state, zombie)
 end
 
 simulation._update_knife = function(state, knife)
-  if state.tick % 10 == 0 then
+  if state.tick % math.floor(60 * 0.1) == 0 then
     local target_pos = { knife.pos[1], knife.pos[2] + 1}
 
     if simulation._is_oob(state, target_pos[1], target_pos[2]) then
@@ -158,8 +174,16 @@ simulation._update_knife = function(state, knife)
       return
     end
 
-    if simulation._is_passable(state, knife, target_pos[1], target_pos[2]) then
+    local blocking = {}
+
+    if simulation._is_passable(state, knife, target_pos[1], target_pos[2], blocking) then
       simulation._move_entity(state, knife, target_pos[1], target_pos[2])
+    end
+
+    if blocking[1] and blocking[1].type == "zombie" then
+      simulation._remove_entity(state, blocking[1])
+      simulation._remove_entity(state, knife)
+      return
     end
   end
 end
@@ -177,8 +201,10 @@ simulation.update = function(state)
   end
 
   for _, entity in pairs(entities) do
-    if entity.type == "zombie" then simulation._update_zombie(state, entity) end
-    if entity.type == "knife" then simulation._update_knife(state, entity) end
+    if not entity.removed then
+      if entity.type == "zombie" then simulation._update_zombie(state, entity) end
+      if entity.type == "knife" then simulation._update_knife(state, entity) end
+    end
   end
 
   state.tick = state.tick + 1
