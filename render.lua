@@ -64,6 +64,7 @@ render._entity_to_index = function(entity)
     if entity_type == "tombstone" then return 79 end
     if entity_type == "dog" then return 16 end
     if entity_type == "dogfloor" then return 12 end
+    if entity_type == "spawner" then return 45 end
   end
 
   return lookup(entity.type)

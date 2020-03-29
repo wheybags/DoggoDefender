@@ -18,9 +18,9 @@ m-----,-----,
 `````````````
 `````````````
 `````````````
-``````````z``
 `````````````
-`````````````
+ZZZZZZZZZZZZZ
+ZZZZZZZZZZZZZ
 ]]
 
   local level = {}
@@ -63,6 +63,8 @@ m-----,-----,
       elseif c == "h" then
         entity = {type = "human", direction = {0, 1}}
         player = entity
+      elseif c == "Z" then
+        entity = {type = "spawner"}
       end
 
       if entity then
@@ -95,7 +97,7 @@ m-----,-----,
   }
 end
 
-simulation.shoot = function(state)
+simulation._shoot = function(state)
   if state.player == nil then return end
 
   if state.tick - state.last_shot_tick < 60 * 0.3 then
@@ -109,7 +111,7 @@ simulation.shoot = function(state)
   table.insert(state.level[pos[2]][pos[1]].entities, {type = "knife", pos = pos, creation = state.tick, direction = {unpack(state.player.direction)}})
 end
 
-simulation.move_player = function(state, vec, strafing)
+simulation._move_player = function(state, vec, strafing)
   if state.player == nil then return end
 
   if not strafing then
@@ -172,7 +174,22 @@ simulation._is_passable = function(state, for_entity, x, y, blocking)
   end
 
   for _, tile_entity in pairs(state.level[y][x].entities) do
-    if tile_entity.type ~= "tombstone" and tile_entity.type ~= "dogfloor" then
+    local passables =
+    {
+      "tombstone",
+      "dogfloor",
+      "spawner",
+    }
+
+    local is_passable = false
+    for _, passable in pairs(passables) do
+      if tile_entity.type == passable then
+        is_passable = true
+        break
+      end
+    end
+
+    if not is_passable then
       if for_entity.type == "knife" then
         if tile_entity.type == "zombie" then
           table.insert(blocking, tile_entity)
@@ -202,7 +219,7 @@ simulation._update_zombie = function(state, zombie)
     end
 
     local target_pos
-    if on_dogfloor then
+    if on_dogfloor and state.dog then
       if state.dog.pos[1] < zombie.pos[1] then
         target_pos =  {zombie.pos[1] - 1, zombie.pos[2]}
       elseif state.dog.pos[1] > zombie.pos[1] then
@@ -220,10 +237,6 @@ simulation._update_zombie = function(state, zombie)
 
     if simulation._is_passable(state, zombie, target_pos[1], target_pos[2], blocking) then
       simulation._move_entity(state, zombie, target_pos[1], target_pos[2])
-    end
-
-    if blocking[1] then
-      print(blocking[1].type)
     end
 
     if blocking[1] and blocking[1].type == "wall" then
@@ -279,9 +292,36 @@ simulation._update_knife = function(state, knife)
 end
 
 simulation._update_swirl = function(state, swirl)
-  if state.tick - swirl.creation > 60 * 0.8 then
+  if state.tick - swirl.creation > 60 * 2 then
     simulation._remove_entity(state, swirl)
     table.insert(state.level[swirl.pos[2]][swirl.pos[1]].entities, {type = "tombstone", pos = swirl.pos, creation = state.tick})
+  end
+end
+
+simulation._update_player = function(state)
+  local player_vector = {0, 0}
+
+  if love.keyboard.isDown("left") or love.keyboard.isDown("a") then
+    player_vector = {-1, 0}
+  end
+  if love.keyboard.isDown("right") or love.keyboard.isDown("d") then
+    player_vector = {1, 0}
+  end
+  if love.keyboard.isDown("up") or love.keyboard.isDown("w") then
+    player_vector = {0, -1}
+  end
+  if love.keyboard.isDown("down") or love.keyboard.isDown("s") then
+    player_vector = {0, 1}
+  end
+
+  local strafing = love.keyboard.isDown("left") or love.keyboard.isDown("right") or love.keyboard.isDown("up") or love.keyboard.isDown("down")
+
+  if player_vector[1] ~= 0 or player_vector[2] ~= 0 then
+    simulation._move_player(state, player_vector, strafing)
+  end
+
+  if love.keyboard.isDown("space") then
+    simulation._shoot(state)
   end
 end
 
@@ -291,6 +331,8 @@ simulation.update = function(state)
   if state.dog == nil then
     return
   end
+
+  simulation._update_player(state)
 
   local entities = {}
 
@@ -307,6 +349,34 @@ simulation.update = function(state)
       if entity.type == "swirl" then simulation._update_swirl(state, entity) end
       if entity.type == "zombie" then simulation._update_zombie(state, entity) end
       if entity.type == "knife" then simulation._update_knife(state, entity) end
+    end
+  end
+
+  if state.tick % (60 * 10) == 0 then
+    local spawners = {}
+    for _, entity in pairs(entities) do
+      if entity.type == "spawner" then
+        table.insert(spawners, entity)
+      end
+    end
+
+    local to_spawn = 10
+
+    for _=1,to_spawn do
+      local zombie = {type = "zombie", pos = {0, 0}, creation = state.tick}
+
+      local pos
+      while true do
+        local index = math.floor(math.random() * (#spawners-1)) + 1
+        pos = {unpack(spawners[index].pos)}
+
+        if simulation._is_passable(state, zombie, pos[1], pos[2]) then
+          break
+        end
+      end
+
+      zombie.pos = pos
+      table.insert(state.level[pos[2]][pos[1]].entities, zombie)
     end
   end
 end
