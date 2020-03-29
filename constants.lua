@@ -1,34 +1,40 @@
 local constants = {}
 
 constants.tile_size = 8
-constants.render_scale = 8
+constants.render_scale = 5
 
 constants.level_ascii = [[
-``````TTTTTTTTTTTTT``````
-``````TTTTTTTTTTTTT``````
-`````````````````````````
-`````````````````````````
-`````````````````````````
-`````````````````````````
-``````m-----------,````RR
-LL````]           [````RR
-LL````]           [````RR
-LL````]           [````RR
-LL````]           [````RR
-LL````]xxxxxxxxxxx[````RR
-LL````]xxxxxdxxxxx[````RR
-LL````]xxxxxxxxxxx[````RR
-LL````]     h     [````RR
-LL````]           [````RR
-LL````]           [````RR
-LL````]           [````RR
-LL````/-----------.````RR
-`````````````````````````
-`````````````````````````
-`````````````````````````
-`````````````````````````
-``````BBBBBBBBBBBBB``````
-``````BBBBBBBBBBBBB``````
+`````````TTTTTTTTTTTTT`````````
+`````````TTTTTTTTTTTTT`````````
+```````````````````````````````
+```````````````````````````````
+```````````````````````````````
+```````````````````````````````
+``````m-----------------,``````
+``````]                 [``````
+``````]                 [``````
+LL````]  xxxxxxxxxxxxx  [````RR
+LL````]  xxxxxxxxxxxxx  [````RR
+LL````]  xxxxxxxxxxxxx  [````RR
+LL````]  xxxxxxxxxxxxx  [````RR
+LL````]  xxxxxxxxxxxxx  [````RR
+LL````]  xxxxxxxxxxxxx  [````RR
+LL````]  xxxxxxdxxxxxx  [````RR
+LL````]  xxxxxxxxxxxxx  [````RR
+LL````]  xxxxxxxxxxxxx  [````RR
+LL````]  xxxxxxxxxxxxx  [````RR
+LL````]  xxxxxxxxxxxxx  [````RR
+LL````]  xxxxxxxxxxxxx  [````RR
+LL````]  xxxxxxxxxxxxx  [````RR
+``````]        h        [``````
+``````]                 [``````
+``````/-----------------.``````
+```````````````````````````````
+```````````````````````````````
+```````````````````````````````
+```````````````````````````````
+`````````BBBBBBBBBBBBB`````````
+`````````BBBBBBBBBBBBB`````````
 ]]
 
 constants.screen_tiles_width = #constants.level_ascii:gmatch("([^\n]*)\n?")()
