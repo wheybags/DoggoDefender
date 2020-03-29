@@ -17,9 +17,7 @@ function love.resize()
 end
 
 function love.keypressed(key)
-  if key == "space" then
-    simulation.shoot(state)
-  end
+
 end
 
 
@@ -40,6 +38,23 @@ function love.quit()
 end
 
 local fixed_update = function()
+  local player_vector = {0, 0}
+
+  if love.keyboard.isDown("left") then
+    player_vector[1] = player_vector[1] - 1
+  end
+  if love.keyboard.isDown("right") then
+    player_vector[1] = player_vector[1] + 1
+  end
+
+  if player_vector[1] ~= 0 or player_vector[2] ~= 0 then
+    simulation.move_player(state, player_vector)
+  end
+
+  if love.keyboard.isDown("space") then
+    simulation.shoot(state)
+  end
+
   simulation.update(state)
 end
 

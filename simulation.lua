@@ -60,6 +60,7 @@ m-----,------,
 
       if entity then
         entity.pos = {#row+1, #level+1}
+        entity.creation = 0
       end
 
       table.insert(row, {entities = {entity}})
@@ -81,7 +82,8 @@ m-----,------,
     level = level,
     player = player,
     tick = 0,
-    last_shot_tick = -999
+    last_shot_tick = -999,
+    last_move_tick = -999,
   }
 end
 
@@ -94,7 +96,20 @@ simulation.shoot = function(state)
 
   local pos = {unpack(state.player.pos)}
 
-  table.insert(state.level[pos[2]][pos[1]].entities, {type = "knife", pos = pos})
+  table.insert(state.level[pos[2]][pos[1]].entities, {type = "knife", pos = pos, creation = state.tick})
+end
+
+simulation.move_player = function(state, vec)
+  if state.tick - state.last_move_tick < 60 * 0.2 then
+    return
+  end
+
+  local target_pos = {state.player.pos[1] + vec[1], state.player.pos[2] + vec[2]}
+
+  if simulation._is_passable(state, state.player, target_pos[1], target_pos[2]) then
+    simulation._move_entity(state, state.player, target_pos[1], target_pos[2])
+    state.last_move_tick = state.tick
+  end
 end
 
 simulation._is_oob = function(state, x, y)
@@ -156,7 +171,7 @@ simulation._is_passable = function(state, for_entity, x, y, blocking)
 end
 
 simulation._update_zombie = function(state, zombie)
-  if state.tick % 60 == 0 then
+  if (state.tick - zombie.creation) % 60 == 0 then
     local target_pos = {zombie.pos[1], zombie.pos[2] - 1}
 
     if simulation._is_passable(state, zombie, target_pos[1], target_pos[2]) then
@@ -166,7 +181,7 @@ simulation._update_zombie = function(state, zombie)
 end
 
 simulation._update_knife = function(state, knife)
-  if state.tick % math.floor(60 * 0.1) == 0 then
+  if (state.tick - knife.creation) % math.floor(60 * 0.1) == 0 then
     local target_pos = { knife.pos[1], knife.pos[2] + 1}
 
     if simulation._is_oob(state, target_pos[1], target_pos[2]) then
