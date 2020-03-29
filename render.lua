@@ -57,6 +57,8 @@ render._entity_to_index = function(entity)
   if entity.type == "zombie" then return 10 end
   if entity.type == "human" then return 5 end
   if entity.type == "knife" then return 47 end
+  if entity.type == "swirl" then return 10 end
+  if entity.type == "tombstone" then return 79 end
 end
 
 render.draw_grid = function(x, y, state)
@@ -72,7 +74,7 @@ render.draw_grid = function(x, y, state)
 
         if index ~= 0 then
           local rotation = 0
-          if entity.type == "knife" then
+          if entity.type == "knife" or entity.type == "swirl" then
             local rotation_lut =
             {
               0 * math.pi / 180,

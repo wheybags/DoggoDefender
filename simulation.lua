@@ -198,8 +198,17 @@ simulation._update_knife = function(state, knife)
     if blocking[1] and blocking[1].type == "zombie" then
       simulation._remove_entity(state, blocking[1])
       simulation._remove_entity(state, knife)
+
+      table.insert(state.level[target_pos[2]][target_pos[1]].entities, {type = "swirl", pos = target_pos, creation = state.tick})
       return
     end
+  end
+end
+
+simulation._update_swirl = function(state, swirl)
+  if state.tick - swirl.creation > 60 * 0.8 then
+    simulation._remove_entity(state, swirl)
+    table.insert(state.level[swirl.pos[2]][swirl.pos[1]].entities, {type = "tombstone", pos = swirl.pos, creation = state.tick})
   end
 end
 
@@ -217,6 +226,7 @@ simulation.update = function(state)
 
   for _, entity in pairs(entities) do
     if not entity.removed then
+      if entity.type == "swirl" then simulation._update_swirl(state, entity) end
       if entity.type == "zombie" then simulation._update_zombie(state, entity) end
       if entity.type == "knife" then simulation._update_knife(state, entity) end
     end
