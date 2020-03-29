@@ -51,6 +51,10 @@ simulation.create_state = function()
         entity = {type = "spawner", side = "bottom", direction = {0, -1}}
       elseif c == "T" then
         entity = {type = "spawner", side = "top", direction = {0, 1}}
+      elseif c == "L" then
+        entity = {type = "spawner", side = "left", direction = {1, -0}}
+      elseif c == "R" then
+        entity = {type = "spawner", side = "right", direction = {-1, 0}}
       end
 
       if entity then
@@ -84,6 +88,7 @@ simulation.create_state = function()
     next_wave_tick = 1,
     last_shot_tick = -999,
     last_move_tick = -999,
+    tileset = "color",
   }
 end
 
@@ -115,7 +120,7 @@ simulation._entity_die = function(state, entity)
   end
   if entity == state.dog then
     state.dog = nil
-    render.tileset = render.tileset_mono
+    state.tileset = "mono"
   end
   simulation._remove_entity(state, entity)
   table.insert(state.level[entity.pos[2]][entity.pos[1]].entities, {type = "swirl", orig = entity.type, pos = {unpack(entity.pos)}, creation = state.tick})
@@ -344,35 +349,21 @@ simulation._update_player = function(state)
   end
 end
 
-simulation.update = function(state)
-  state.tick = state.tick + 1
+simulation._update_spawns = function(state, entities)
 
-  if state.dog == nil then
-    return
-  end
-
-  simulation._update_player(state)
-
-  local entities = {}
-
-  for _, row in pairs(state.level) do
-    for _, tile in pairs(row) do
-      for _, entity in pairs(tile.entities) do
-        table.insert(entities, entity)
+  -- wait for the last phase of the wave to finish, then wait an addition few seconds between waves
+  if state.wave_phase == 1 then
+    for _, entity in pairs(entities) do
+      if entity.type == "zombie" then
+        state.next_wave_tick = state.tick + 60 * 3 -- wait between waves
+        return
       end
     end
   end
 
-  for _, entity in pairs(entities) do
-    if not entity.removed then
-      if entity.type == "swirl" then simulation._update_swirl(state, entity) end
-      if entity.type == "zombie" then simulation._update_zombie(state, entity) end
-      if entity.type == "knife" then simulation._update_knife(state, entity) end
-    end
-  end
+  if state.tick >= state.next_wave_tick then
 
-  if state.tick == state.next_wave_tick then
-    local spawners_by_side = {top = {}, bottom = {}}
+    local spawners_by_side = {top = {}, bottom = {}, left = {}, right = {}}
     for _, entity in pairs(entities) do
       if entity.type == "spawner" then
         table.insert(spawners_by_side[entity.side], entity)
@@ -403,15 +394,18 @@ simulation.update = function(state)
       local wave_phase = wave[state.wave_phase]
       state.wave_display = state.wave
 
-      print("spawning wave " .. state.wave .. ", phase " .. state.wave_phase)
+      --print("spawning wave " .. state.wave .. ", phase " .. state.wave_phase)
 
-      if wave_phase.bottom then
-        spawn_zombies(spawners_by_side["bottom"], wave_phase.bottom)
+      local spawn_side = function(side)
+        if wave_phase[side] then
+          spawn_zombies(spawners_by_side[side], wave_phase[side])
+        end
       end
 
-      if wave_phase.top then
-        spawn_zombies(spawners_by_side["top"], wave_phase.top)
-      end
+      spawn_side("left")
+      spawn_side("right")
+      spawn_side("top")
+      spawn_side("bottom")
 
 
       state.wave_phase = state.wave_phase + 1
@@ -425,6 +419,36 @@ simulation.update = function(state)
       -- you're winner!
     end
   end
+end
+
+simulation.update = function(state)
+  state.tick = state.tick + 1
+
+  if state.dog == nil then
+    return
+  end
+
+  simulation._update_player(state)
+
+  local entities = {}
+
+  for _, row in pairs(state.level) do
+    for _, tile in pairs(row) do
+      for _, entity in pairs(tile.entities) do
+        table.insert(entities, entity)
+      end
+    end
+  end
+
+  for _, entity in pairs(entities) do
+    if not entity.removed then
+      if entity.type == "swirl" then simulation._update_swirl(state, entity) end
+      if entity.type == "zombie" then simulation._update_zombie(state, entity) end
+      if entity.type == "knife" then simulation._update_knife(state, entity) end
+    end
+  end
+
+  simulation._update_spawns(state, entities)
 end
 
 return simulation

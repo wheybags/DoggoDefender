@@ -106,10 +106,13 @@ render.draw_grid = function(x, y, state)
             assert(rotation)
           end
 
-          local tileset
+          local tileset = render["tileset_" .. state.tileset]
           if entity.type == "swirl" and entity.orig == "dog" then
             tileset = render.tileset_color
+          elseif state.dog == nil then
+            rotation = 0 -- freeze everything but dog on death screen
           end
+
 
           render.draw_tile((x + grid_x-1) * constants.tile_size, (y + grid_y-1) * constants.tile_size, index, rotation, tileset)
 
@@ -162,7 +165,7 @@ local str_pad = function (str, pad_char, target_size)
 end
 
 render.draw = function(state)
-  love.graphics.clear(34/255, 35/255, 35/255)
+  --love.graphics.clear(34/255, 35/255, 35/255)
 
   render.draw_grid(0, constants.screen_offset_y, state)
 

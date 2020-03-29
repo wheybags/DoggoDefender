@@ -4,27 +4,31 @@ constants.tile_size = 8
 constants.render_scale = 8
 
 constants.level_ascii = [[
-TTTTTTTTTTTTT
-TTTTTTTTTTTTT
-`````````````
-`````````````
-`````````````
-`````````````
-m-----------,
-]           [
-]           [
-]xxxxxxxxxxx[
-]xxxxxdxxxxx[
-]xxxxxxxxxxx[
-]     h     [
-]           [
-/-----------.
-`````````````
-`````````````
-`````````````
-`````````````
-BBBBBBBBBBBBB
-BBBBBBBBBBBBB
+``````TTTTTTTTTTTTT``````
+``````TTTTTTTTTTTTT``````
+`````````````````````````
+`````````````````````````
+`````````````````````````
+`````````````````````````
+``````m-----------,````RR
+LL````]           [````RR
+LL````]           [````RR
+LL````]           [````RR
+LL````]           [````RR
+LL````]xxxxxxxxxxx[````RR
+LL````]xxxxxdxxxxx[````RR
+LL````]xxxxxxxxxxx[````RR
+LL````]     h     [````RR
+LL````]           [````RR
+LL````]           [````RR
+LL````]           [````RR
+LL````/-----------.````RR
+`````````````````````````
+`````````````````````````
+`````````````````````````
+`````````````````````````
+``````BBBBBBBBBBBBB``````
+``````BBBBBBBBBBBBB``````
 ]]
 
 constants.screen_tiles_width = #constants.level_ascii:gmatch("([^\n]*)\n?")()
@@ -46,7 +50,7 @@ constants.waves[1] =
   },
   {
     bottom = 3,
-    wait = 60 * 10,
+    wait = 1,
   }
 }
 constants.waves[2] =
@@ -61,7 +65,7 @@ constants.waves[2] =
   },
   {
     bottom = 3,
-    wait = 60 * 10,
+    wait = 1,
   }
 }
 constants.waves[3] =
@@ -72,8 +76,27 @@ constants.waves[3] =
   },
   {
     bottom = 5,
-    wait = 60 * 10,
+    wait = 1,
   },
+}
+constants.waves[4] =
+{
+  {
+    top = 5,
+    wait = 60 * 2,
+  },
+  {
+    right = 5,
+    wait = 60 * 2,
+  },
+  {
+    bottom = 5,
+    wait = 60 * 2,
+  },
+  {
+    left = 5,
+    wait = 1,
+  }
 }
 
 
