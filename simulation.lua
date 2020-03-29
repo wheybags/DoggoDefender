@@ -18,7 +18,7 @@ m-----,-----,
 `````````````
 `````````````
 `````````````
-``````z``````
+``````````z``
 `````````````
 `````````````
 ]]
@@ -61,7 +61,7 @@ m-----,-----,
       elseif c == "x" then
         entity = {type = "dogfloor"}
       elseif c == "h" then
-        entity = {type = "human"}
+        entity = {type = "human", direction = {0, 1}}
         player = entity
       end
 
@@ -106,12 +106,15 @@ simulation.shoot = function(state)
 
   local pos = {unpack(state.player.pos)}
 
-  table.insert(state.level[pos[2]][pos[1]].entities, {type = "knife", pos = pos, creation = state.tick})
+  table.insert(state.level[pos[2]][pos[1]].entities, {type = "knife", pos = pos, creation = state.tick, direction = {unpack(state.player.direction)}})
 end
 
-simulation.move_player = function(state, vec)
+simulation.move_player = function(state, vec, strafing)
   if state.player == nil then return end
 
+  if not strafing then
+    state.player.direction = vec
+  end
 
   if state.tick - state.last_move_tick < 60 * 0.2 then
     return
@@ -187,7 +190,31 @@ end
 
 simulation._update_zombie = function(state, zombie)
   if (state.tick - zombie.creation) % 60 == 0 then
-    local target_pos = {zombie.pos[1], zombie.pos[2] - 1}
+
+    local on_dogfloor = false
+
+    local current_tile = state.level[zombie.pos[2]][zombie.pos[1]]
+    for _, entity in pairs(current_tile.entities) do
+      if entity.type == "dogfloor" then
+        on_dogfloor = true
+        break
+      end
+    end
+
+    local target_pos
+    if on_dogfloor then
+      if state.dog.pos[1] < zombie.pos[1] then
+        target_pos =  {zombie.pos[1] - 1, zombie.pos[2]}
+      elseif state.dog.pos[1] > zombie.pos[1] then
+        target_pos =  {zombie.pos[1] + 1, zombie.pos[2]}
+      elseif state.dog.pos[2] < zombie.pos[2] then
+        target_pos =  {zombie.pos[1], zombie.pos[2] - 1}
+      elseif state.dog.pos[2] > zombie.pos[2] then
+        target_pos =  {zombie.pos[1], zombie.pos[2] + 1}
+      end
+    else
+      target_pos = {zombie.pos[1], zombie.pos[2] - 1}
+    end
 
     local blocking = {}
 
@@ -228,7 +255,7 @@ end
 
 simulation._update_knife = function(state, knife)
   if (state.tick - knife.creation) % math.floor(60 * 0.1) == 0 then
-    local target_pos = { knife.pos[1], knife.pos[2] + 1}
+    local target_pos = { knife.pos[1] + knife.direction[1], knife.pos[2] + knife.direction[2]}
 
     if simulation._is_oob(state, target_pos[1], target_pos[2]) then
       simulation._remove_entity(state, knife)

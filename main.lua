@@ -40,15 +40,23 @@ end
 local fixed_update = function()
   local player_vector = {0, 0}
 
-  if love.keyboard.isDown("left") then
-    player_vector[1] = player_vector[1] - 1
+  if love.keyboard.isDown("left") or love.keyboard.isDown("a") then
+    player_vector = {-1, 0}
   end
-  if love.keyboard.isDown("right") then
-    player_vector[1] = player_vector[1] + 1
+  if love.keyboard.isDown("right") or love.keyboard.isDown("d") then
+    player_vector = {1, 0}
+  end
+  if love.keyboard.isDown("up") or love.keyboard.isDown("w") then
+    player_vector = {0, -1}
+  end
+  if love.keyboard.isDown("down") or love.keyboard.isDown("s") then
+    player_vector = {0, 1}
   end
 
+  local strafing = love.keyboard.isDown("left") or love.keyboard.isDown("right") or love.keyboard.isDown("up") or love.keyboard.isDown("down")
+
   if player_vector[1] ~= 0 or player_vector[2] ~= 0 then
-    simulation.move_player(state, player_vector)
+    simulation.move_player(state, player_vector, strafing)
   end
 
   if love.keyboard.isDown("space") then

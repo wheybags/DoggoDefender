@@ -72,6 +72,8 @@ end
 render.draw_grid = function(x, y, state)
   local tile_grid = state.level
 
+  local indicator_data
+
   for grid_y = 1,#tile_grid do
     for grid_x=1,#(tile_grid[grid_y]) do
       for _, entity in pairs(tile_grid[grid_y][grid_x].entities) do
@@ -96,9 +98,40 @@ render.draw_grid = function(x, y, state)
             assert(rotation)
           end
           render.draw_tile(x + (grid_x-1) * constants.tile_size, y + (grid_y-1) * constants.tile_size + shift, index, rotation)
+
+          if entity.type == "human" then
+            indicator_data =
+            {
+              pos = {entity.pos[1] + entity.direction[1], entity.pos[2] + entity.direction[2]},
+              direction = entity.direction,
+            }
+          end
         end
       end
     end
+  end
+
+  if indicator_data then
+    -- if love.keyboard.isDown("left") then
+    --player_vector = {-1, 0}
+    --end
+    --if love.keyboard.isDown("right") then
+    --  player_vector = {1, 0}
+    --end
+    --if love.keyboard.isDown("up") then
+    --  player_vector = {0, -1}
+    --end
+    --if love.keyboard.isDown("down") then
+    --  player_vector = {0, 1}
+    --end
+
+    local rotation
+    if indicator_data.direction[1] == -1 then rotation = 180 * math.pi / 180 end -- left
+    if indicator_data.direction[1] ==  1 then rotation =   0 * math.pi / 180 end -- right
+    if indicator_data.direction[2] == -1 then rotation = 270 * math.pi / 180 end -- up
+    if indicator_data.direction[2] ==  1 then rotation =  90 * math.pi / 180 end -- down
+
+    render.draw_tile(x + (indicator_data.pos[1]-1) * constants.tile_size, y + (indicator_data.pos[2]-1) * constants.tile_size, 64, rotation)
   end
 end
 
