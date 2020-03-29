@@ -79,8 +79,9 @@ simulation.create_state = function()
     dog = dog,
     tick = 0,
     wave = 1,
+    wave_display = 1,
     wave_phase = 1,
-    next_wave_tick = 60 * 3,
+    next_wave_tick = 1,
     last_shot_tick = -999,
     last_move_tick = -999,
   }
@@ -406,6 +407,7 @@ simulation.update = function(state)
 
     if wave then
       local wave_phase = wave[state.wave_phase]
+      state.wave_display = state.wave
 
       print("spawning wave " .. state.wave .. ", phase " .. state.wave_phase)
 

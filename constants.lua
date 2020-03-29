@@ -35,10 +35,15 @@ for _ in tmp do
   constants.screen_tiles_height = constants.screen_tiles_height + 1
 end
 
+constants.screen_offset_y = 1
+
 
 constants.waves = {}
 constants.waves[1] =
 {
+  {
+    wait = 60 * 3
+  },
   {
     bottom = 3,
     wait = 60 * 10,

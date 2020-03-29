@@ -7,6 +7,8 @@ render.setup = function()
   render.tileset_color:setFilter("nearest")
   render.tileset_mono = love.graphics.newImage('gfx/monochrome_tilemap.png')
   render.tileset_mono:setFilter("nearest")
+  render.tileset_font = love.graphics.newImage('gfx/font_2.png')
+  render.tileset_font:setFilter("nearest")
 
   render.tileset = render.tileset_color
 
@@ -35,8 +37,8 @@ render.draw_tile = function(x, y, tile_index, rotation, tileset)
 
   love.graphics.draw(tileset,
                      render.tileset_quads[tile_index],
-                     x * constants.render_scale,
-                     y * constants.render_scale,
+                     (x + (constants.tile_size / 2)) * constants.render_scale,
+                     (y + (constants.tile_size / 2)) * constants.render_scale,
                      rotation, constants.render_scale, constants.render_scale,
                      constants.tile_size / 2, constants.tile_size / 2)
 end
@@ -78,20 +80,15 @@ end
 render.draw_grid = function(x, y, state)
   local tile_grid = state.level
 
-  local indicator_data
-
   for grid_y = 1,#tile_grid do
     for grid_x=1,#(tile_grid[grid_y]) do
 
       -- draw ground tile
-      render.draw_tile(x + (grid_x-1) * constants.tile_size, y + (grid_y-1) * constants.tile_size, 12, 0)
+      render.draw_tile((x + grid_x-1) * constants.tile_size, (y + grid_y-1) * constants.tile_size, 12, 0)
 
 
       for _, entity in pairs(tile_grid[grid_y][grid_x].entities) do
         local index = render._entity_to_index(entity)
-
-        local shift = 0
-        if entity and entity.shift then shift = entity.shift end
 
         if index ~= 0 then
           local rotation = 0
@@ -114,57 +111,47 @@ render.draw_grid = function(x, y, state)
             tileset = render.tileset_color
           end
 
-          render.draw_tile(x + (grid_x-1) * constants.tile_size, y + (grid_y-1) * constants.tile_size + shift, index, rotation, tileset)
+          render.draw_tile((x + grid_x-1) * constants.tile_size, (y + grid_y-1) * constants.tile_size, index, rotation, tileset)
 
-          if entity.type == "human" then
-            indicator_data =
-            {
-              pos = {entity.pos[1] + entity.direction[1], entity.pos[2] + entity.direction[2]},
-              direction = entity.direction,
-            }
-          end
+          --love.graphics.setColor(1, 0, 0)
+          --love.graphics.rectangle("line",
+          --  (x + grid_x-1) * constants.tile_size * constants.render_scale,
+          --  (y + grid_y-1) * constants.tile_size * constants.render_scale,
+          --  constants.tile_size * constants.render_scale,
+          --  constants.tile_size * constants.render_scale)
+          --love.graphics.setColor(1,1,1)
         end
       end
     end
   end
-
-  if false then --indicator_data then
-    -- if love.keyboard.isDown("left") then
-    --player_vector = {-1, 0}
-    --end
-    --if love.keyboard.isDown("right") then
-    --  player_vector = {1, 0}
-    --end
-    --if love.keyboard.isDown("up") then
-    --  player_vector = {0, -1}
-    --end
-    --if love.keyboard.isDown("down") then
-    --  player_vector = {0, 1}
-    --end
-
-    local rotation
-    if indicator_data.direction[1] == -1 then rotation = 180 * math.pi / 180 end -- left
-    if indicator_data.direction[1] ==  1 then rotation =   0 * math.pi / 180 end -- right
-    if indicator_data.direction[2] == -1 then rotation = 270 * math.pi / 180 end -- up
-    if indicator_data.direction[2] ==  1 then rotation =  90 * math.pi / 180 end -- down
-
-    render.draw_tile(x + (indicator_data.pos[1]-1) * constants.tile_size, y + (indicator_data.pos[2]-1) * constants.tile_size, 64, rotation)
-  end
 end
 
+render._get_font_index = function(char)
+  local char_val = string.byte(char)
 
-local level_to_tileset_grid = function(level)
-  local grid = {}
-
-  for y = 1,#level do
-    local row = {}
-    for x = 1,#(level[y]) do
-      table.insert(row, render._entity_to_index(level[y][x]))
-    end
-    table.insert(grid, row)
+  if char_val >= string.byte('a') and char_val <= string.byte('z') then
+    return 1 + char_val - string.byte('a')
   end
 
-  return grid
+  if char_val >= string.byte('0') and char_val <= string.byte('9') then
+    return 31 + char_val - string.byte('0')
+  end
+
+  if char == "?" then return 41 end
+  if char == "!" then return 42 end
+  if char == " " then return 43 end
+
+  return 41
+end
+
+render._draw_text = function(x, y, text)
+  for c in text:gmatch(".") do
+    local index = render._get_font_index(c)
+    --print(index)
+    render.draw_tile(x * constants.tile_size, y * constants.tile_size, index, 0, render.tileset_font)
+
+    x = x + 1
+  end
 end
 
 render.draw = function(state)
@@ -200,8 +187,11 @@ render.draw = function(state)
   --end
 
   --local grid = level_to_tileset_grid(state.level)
-  render.draw_grid((constants.screen_tiles_width / 2 - (#state.level[1]-1) / 2) * constants.tile_size,
-                   (constants.screen_tiles_height / 2 - (#state.level-1) / 2) * constants.tile_size, state)
+  love.graphics.clear(34/255, 35/255, 35/255)
+
+  render.draw_grid(0, constants.screen_offset_y, state)
+
+  render._draw_text(0, 0, "wave " .. state.wave_display)
 end
 
 return render
