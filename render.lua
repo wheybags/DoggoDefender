@@ -147,51 +147,28 @@ end
 render._draw_text = function(x, y, text)
   for c in text:gmatch(".") do
     local index = render._get_font_index(c)
-    --print(index)
     render.draw_tile(x * constants.tile_size, y * constants.tile_size, index, 0, render.tileset_font)
 
     x = x + 1
   end
 end
 
+local str_pad = function (str, pad_char, target_size)
+  while string.len(str) < target_size do
+    str = pad_char .. str
+  end
+
+  return str
+end
+
 render.draw = function(state)
-  --render.draw_tile(10, 10, 2)
-
-  --local level =
-  --{
-  --  {1,  2,  3,  4},
-  --  {11, 12, 0, 14},
-  --  {11, 12, 12, 14},
-  --  {21, 2,  2,  24},
-  --}
-
-
-
-  --
-  --local get = function(x, y, l)
-  --  if x <= #l[1] and y <= #level and x > 0 and y > 0 then
-  --    return l[y][x]
-  --  end
-  --
-  --  return 0
-  --end
-  --
-  --local level_walls_fixed = {table.unpack(level)}
-  --
-  --for y = 1,#level do
-  --  for x = 1,#(level[y]) do
-  --    if get(x, y, level) == 1 then
-  --      if
-  --    end
-  --  end
-  --end
-
-  --local grid = level_to_tileset_grid(state.level)
   love.graphics.clear(34/255, 35/255, 35/255)
 
   render.draw_grid(0, constants.screen_offset_y, state)
 
-  render._draw_text(0, 0, "wave " .. state.wave_display)
+  local wave_str = "wave " .. str_pad(''..state.wave_display, '0', 4)
+  local wave_str_pos = math.floor(constants.screen_tiles_width / 2 - string.len(wave_str) / 2)
+  render._draw_text(wave_str_pos, 0, wave_str)
 end
 
 return render

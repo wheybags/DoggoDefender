@@ -45,7 +45,7 @@ simulation.create_state = function()
       elseif c == "x" then
         entity = {type = "dogfloor"}
       elseif c == "h" then
-        entity = {type = "human", direction = {0, 1}}
+        entity = {type = "human"}
         player = entity
       elseif c == "B" then
         entity = {type = "spawner", side = "bottom", direction = {0, -1}}
@@ -121,12 +121,8 @@ simulation._entity_die = function(state, entity)
   table.insert(state.level[entity.pos[2]][entity.pos[1]].entities, {type = "swirl", orig = entity.type, pos = {unpack(entity.pos)}, creation = state.tick})
 end
 
-simulation._move_player = function(state, vec, strafing)
+simulation._move_player = function(state, vec)
   if state.player == nil then return end
-
-  if not strafing then
-    state.player.direction = vec
-  end
 
   if state.tick - state.last_move_tick < 60 * 0.15 then
     return
@@ -339,10 +335,8 @@ simulation._update_player = function(state)
     player_vector = {0, 1}
   end
 
-  local strafing = love.keyboard.isDown("left") or love.keyboard.isDown("right") or love.keyboard.isDown("up") or love.keyboard.isDown("down")
-
   if player_vector[1] ~= 0 or player_vector[2] ~= 0 then
-    simulation._move_player(state, player_vector, strafing)
+    simulation._move_player(state, player_vector)
   end
 
   if love.keyboard.isDown("space") then
