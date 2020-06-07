@@ -1,7 +1,7 @@
 local constants = require('constants')
 
 function love.conf(t)
-  t.window.title = "???"         -- The window title (string)
+  t.window.title = "Doggo Defender"         -- The window title (string)
   t.window.icon = nil                 -- Filepath to an image to use as the window's icon (string)
   t.window.width = constants.render_scale * constants.screen_tiles_width * constants.tile_size                -- The window width (number)
   t.window.height = constants.render_scale * (constants.screen_tiles_height + constants.screen_offset_y) * constants.tile_size               -- The window height (number)
