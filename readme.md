@@ -10,6 +10,9 @@ It was like a game jam, but with only two participants. The idea was:
 
 It actually turned out quite well. I wouldn't normally be that interested in wave defense style games, but despite the simple gameplay and limited scope, I think it ended up being pretty fun.
 
+## Download
+Windows / Linux binaries here: [doggo_defender.zip](https://github.com/wheybags/DoggoDefender/releases/download/1.0/doggo_defender.zip)
+
 ## Credits
 - Main GFX: https://www.kenney.nl/assets/micro-roguelike
 - Pixel font: https://opengameart.org/content/8x8-ascii-bitmap-font-with-c-source
